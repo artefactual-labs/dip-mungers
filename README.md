@@ -31,7 +31,7 @@ nano ~/.dip-mungers
 pip install .
 ```
 
-When installation is cmoplete, three new command-line scripts will be available: `dip-retrieve`, 'dip-metadata', and `dip-upload`.
+When installation is cmoplete, three new command-line scripts will be available: `dip-retrieve`, `dip-metadata`, and `dip-upload`.
 
 ## Usage
 
@@ -72,4 +72,4 @@ To use upload DIPs by either method to the development AtoM rather than producti
 
 ## Acknowledgements
 
-This repository contains source code from [paramiko-jump](https://github.com/andrewschenck/paramiko-jump), Copyright 2020, Andrew Blair Schenck, Licensed under the Apache License, Version 2.0.
+This repository contains source code from [paramiko-jump](https://github.com/andrewschenck/paramiko-jump). Copyright 2020, Andrew Blair Schenck, licensed under the Apache License, Version 2.0.
