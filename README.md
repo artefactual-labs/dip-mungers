@@ -51,7 +51,7 @@ To use download DIPs from the development Storage Service rather than production
 
 From here, you can either upload an entire DIP, or -- in cases where you do not want to make objects available via AtoM but wish to provide metadata stubs for users browsing your repository -- just its metadata. In either case, you'll want to manually populate the 'slug' column of the spreadsheet consistent with [the AtoM documentation for manually uploading DIP objects](https://www.accesstomemory.org/en/docs/2.5/admin-manual/maintenance/cli-tools/#manually-upload-archivematica-dip-objects). The `dip-upload` script otherwise follows this workflow exactly by performing the scp transfer step on the server for you and cleaning up afterwards.
 
-Your SFU user account will need sudo rights on the AtoM server. To avoid this, you can pass the `--nginx` argument to use the `nginx` user for the DIP upload rather than your SFU user account. The `--nginx` option will only work if your SSH key is on the jump server.
+Your SFU user account will need sudo rights on the AtoM server. To avoid this, you can pass the `--nginx` argument to use the `nginx` user for the DIP upload rather than your SFU user account. The `--nginx` option will only work if your SSH keys are configured on the jump server and AtoM server to allow passwordless ssh connection.
 
 e.g.
 
