@@ -2,8 +2,6 @@
 
 We created these at SFU Archives in order to support ad-hoc DIP upload and metadata updates from Archivematica to AtoM at points in our workflow not supported by the existing [AtoM DIP upload functionality](https://www.archivematica.org/en/docs/archivematica-1.10/user-manual/access/access/#upload-atom).
 
-If you plan to use these scripts, I encourage you to compile them for your local environment with `pyinstaller`, so that their dependencies are packaged in and they can be run like command line programs rather than Python scripts. This needs to be done separately for Windows, Mac, and Linux environments. Many of the server *names* are currently hardcoded to SFU Archives' environment but the paths themselves are all as generic as possible.
-
 ## Installation
 
 1. Clone this repo:
