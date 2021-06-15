@@ -2,9 +2,10 @@ import argparse
 import configparser
 import csv
 import glob
+import lxml
+import metsrw
 import os
 import re
-import xmltodict
 
 from agentarchives import atom
 
@@ -12,6 +13,8 @@ from agentarchives import atom
 class ConfigParsingError(Exception):
     pass
 
+
+UUID4_PREFIX_LENGTH = 33
 
 USER_DIRECTORY = os.path.expanduser("~")
 CONFIG_FILE = os.path.join(USER_DIRECTORY, ".dip-mungers")
@@ -45,6 +48,15 @@ def _make_parser():
     return parser
 
 
+def uuid_from_filename(filename):
+    UUID_REGEX = r"[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}"
+    UUID4_HEX = re.compile(UUID_REGEX, re.I)
+    match = re.match(UUID4_HEX, filename)
+    if match:
+        return match.group(0)
+    return None
+
+
 def main():
     parser = _make_parser()
     args = parser.parse_args()
@@ -73,73 +85,44 @@ def main():
 
     # Parse METS file.
     metspath = glob.glob(local_dip_path + "/METS*.xml")[0]
-    with open(metspath, "r") as metsfile:
-        mets = metsfile.read()
-    metstree = xmltodict.parse(mets)
+    try:
+        mets = metsrw.METSDocument.fromfile(metspath)
+    except (AttributeError, lxml.etree.Error) as err:
+        print("Unable to parse METS file {}: {}".format(metspath, err))
 
     client = atom.AtomClient(atom_url, api_token, 443)
 
     # Upload file metadata.
     for dip_name in dip_names:
-        dip_name["filename"] = re.sub(
-            r"^\S+?-\S+?-\S+?-\S+?-\S+?-", "", dip_name["filename"]
-        )
-        for techMD in metstree["mets:mets"]["mets:amdSec"]:
+        file_uuid = uuid_from_filename(dip_name["filename"])
+        if not file_uuid:
+            continue
+
+        fs_entry = mets.get_file(file_uuid=file_uuid)
+        if not fs_entry:
+            continue
+
+        filename = fs_entry.label
+        size = ""
+        file_format = ""
+        for premis_object in fs_entry.get_premis_objects():
             try:
-                size = ""
-                object_type = ""
-                file_uuid = ""
-                if (
-                    os.path.splitext(
-                        techMD["mets:techMD"]["mets:mdWrap"]["mets:xmlData"][
-                            "premis:object"
-                        ]["premis:objectCharacteristics"][
-                            "premis:objectCharacteristicsExtension"
-                        ][
-                            "rdf:RDF"
-                        ][
-                            "rdf:Description"
-                        ][
-                            "System:FileName"
-                        ]
-                    )[0]
-                    == os.path.splitext(dip_name["filename"])[0]
-                ):
-                    size = techMD["mets:techMD"]["mets:mdWrap"]["mets:xmlData"][
-                        "premis:object"
-                    ]["premis:objectCharacteristics"][
-                        "premis:objectCharacteristicsExtension"
-                    ][
-                        "rdf:RDF"
-                    ][
-                        "rdf:Description"
-                    ][
-                        "System:FileSize"
-                    ]
-                    object_type = techMD["mets:techMD"]["mets:mdWrap"]["mets:xmlData"][
-                        "premis:object"
-                    ]["premis:objectCharacteristics"]["premis:format"][
-                        "premis:formatDesignation"
-                    ][
-                        "premis:formatName"
-                    ]
-                    file_uuid = techMD["mets:techMD"]["mets:mdWrap"]["mets:xmlData"][
-                        "premis:object"
-                    ]["premis:objectIdentifier"]["premis:objectIdentifierValue"]
-            except:
+                size = premis_object.size
+                file_format = premis_object.format_name
+            except AttributeError:
                 pass
 
         try:
             client.add_digital_object(
                 dip_name["slug"],
-                title=dip_name["filename"],
+                title=filename,
                 size=size,
-                object_type=object_type,
+                object_type=file_format,
                 file_uuid=file_uuid,
             )
-            print("Uploaded metadata for {}".format(dip_name["filename"]))
+            print("Uploaded metadata for {}".format(filename))
         except NameError as err:
-            print("Couldn't upload metadata for {}: {}".format(dip_name["filename"], err))
+            print("Couldn't upload metadata for {}: {}".format(filename, err))
 
 
 if __name__ == "__main__":
