@@ -102,28 +102,43 @@ def main():
         if not fs_entry:
             continue
 
+        filename = fs_entry.label
+        data = {"filename": filename}
+
         try:
             premis_object = fs_entry.get_premis_objects()[0]
         except IndexError:
             continue
 
-        filename = fs_entry.label
-        size = ""
-        file_format = ""
-
-        try:
-            size = premis_object.size
-            file_format = premis_object.format_name
-        except AttributeError:
-            pass
+        props = (
+            "size",
+            "format_name",
+            "format_version",
+            "format_registry_name",
+            "format_registry_key",
+        )
+        for prop in props:
+            try:
+                val = getattr(premis_object, prop)
+            except AttributeError:
+                continue
+            # Calling `getattr` to find an attribute deeper in the `premis_object`
+            # structure returns a non JSON serializable tuple instead of a None
+            # value. See Issues#743 for more information.
+            if not val or isinstance(val, tuple):
+                continue
+            data[prop] = val
 
         try:
             client.add_digital_object(
                 dip_name["slug"],
                 title=filename,
                 usage="Offline",
-                size=size,
-                object_type=file_format,
+                size=data.get("size"),
+                format_name=data.get("format_name"),
+                format_version=data.get("format_version"),
+                format_registry_name=data.get("format_registry_name"),
+                format_registry_key=data.get("format_registry_key"),
                 file_uuid=file_uuid,
             )
             print("Uploaded metadata for {}".format(filename))
