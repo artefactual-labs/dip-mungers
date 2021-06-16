@@ -102,20 +102,26 @@ def main():
         if not fs_entry:
             continue
 
+        try:
+            premis_object = fs_entry.get_premis_objects()[0]
+        except IndexError:
+            continue
+
         filename = fs_entry.label
         size = ""
         file_format = ""
-        for premis_object in fs_entry.get_premis_objects():
-            try:
-                size = premis_object.size
-                file_format = premis_object.format_name
-            except AttributeError:
-                pass
+
+        try:
+            size = premis_object.size
+            file_format = premis_object.format_name
+        except AttributeError:
+            pass
 
         try:
             client.add_digital_object(
                 dip_name["slug"],
                 title=filename,
+                usage="Offline",
                 size=size,
                 object_type=file_format,
                 file_uuid=file_uuid,
