@@ -7,7 +7,7 @@ We created these at SFU Archives in order to support ad-hoc DIP upload and metad
 1. Clone this repo:
 
 ```bash
-git clone https://github.com/axfelix/dip-mungers
+git clone https://github.com/artefactual-labs/dip-mungers
 cd dip-mungers
 ```
 
